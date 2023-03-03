@@ -69,6 +69,8 @@ public class FileClient {
                             while ((bytesRead = fis.read(buffer)) != -1) {
                                 output.write(buffer, 0, bytesRead);
                             }
+                            // Send success confirmation to server
+                            output.writeByte('S');
                             if (input.readByte() == 'S') {
                                 System.out.println("File uploaded successfully.");
                             } else {
