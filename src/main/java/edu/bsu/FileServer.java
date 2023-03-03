@@ -83,14 +83,14 @@ class ServerThread extends Thread {
 
                 if (file.exists()) {
                     dataOutput.writeByte('F'); // Failure
-                } else {
+                }
+                else {
                     try (FileOutputStream fos = new FileOutputStream(file)) {
                         byte[] buffer = new byte[4096];
                         int bytesRead;
                         while ((bytesRead = dataInput.read(buffer)) != -1) {
                             fos.write(buffer, 0, bytesRead);
                         }
-                        dataOutput.writeByte('S'); // Success
                     } catch (IOException e) {
                         dataOutput.writeByte('F'); // Failure
                     }
@@ -110,7 +110,6 @@ class ServerThread extends Thread {
                         if (bytesRead != fileSize) {
                             dataOutput.writeByte('F'); // Failure
                         } else {
-                            dataOutput.writeByte('S'); // Success
                             dataOutput.write(buffer, 0, fileSize);
                         }
                     } catch (IOException e) {
