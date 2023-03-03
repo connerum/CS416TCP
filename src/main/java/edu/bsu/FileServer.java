@@ -4,22 +4,30 @@ import java.io.*;
 import java.net.*;
 
 public class FileServer {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: java FileServer <port number>");
+            System.exit(1);
+        }
+
         int portNumber = Integer.parseInt(args[0]);
-        ServerSocket serverSocket = new ServerSocket(portNumber);
-        System.out.println("Server is running on port " + portNumber);
 
-        while (true) {
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connected: " + clientSocket);
+        try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
+            System.out.println("File server is listening on port " + portNumber);
 
-            Thread t = new Thread(new ServerThread(clientSocket));
-            t.start();
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Accepted connection from " + clientSocket.getInetAddress().getHostAddress());
+                new ServerThread(clientSocket).start();
+            }
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
         }
     }
 }
 
-class ServerThread implements Runnable {
+class ServerThread extends Thread {
     private Socket clientSocket;
 
     public ServerThread(Socket socket) {
@@ -27,106 +35,95 @@ class ServerThread implements Runnable {
     }
 
     public void run() {
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        try (
+                InputStream input = clientSocket.getInputStream();
+                OutputStream output = clientSocket.getOutputStream();
+                DataInputStream dataInput = new DataInputStream(input);
+                DataOutputStream dataOutput = new DataOutputStream(output);
+        ) {
+            byte command = dataInput.readByte();
 
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                System.out.println("Received command: " + inputLine);
-                String[] tokens = inputLine.split(" ");
-                String command = tokens[0];
+            if (command == 'L') {
+                // List files
+                File folder = new File(".");
+                File[] files = folder.listFiles();
 
-                switch (command) {
-                    case "list":
-                        File folder = new File(".");
-                        File[] listOfFiles = folder.listFiles();
-                        StringBuilder files = new StringBuilder();
+                for (File file : files) {
+                    if (file.isFile()) {
+                        dataOutput.writeUTF(file.getName());
+                    }
+                }
+                dataOutput.writeUTF("END");
+            } else if (command == 'D') {
+                // Delete file
+                String fileName = dataInput.readUTF();
+                File file = new File(fileName);
 
-                        for (File file : listOfFiles) {
-                            if (file.isFile()) {
-                                files.append(file.getName()).append("\n");
-                            }
-                        }
+                if (file.delete()) {
+                    dataOutput.writeByte('S'); // Success
+                } else {
+                    dataOutput.writeByte('F'); // Failure
+                }
+            } else if (command == 'R') {
+                // Rename file
+                String oldFileName = dataInput.readUTF();
+                String newFileName = dataInput.readUTF();
+                File oldFile = new File(oldFileName);
+                File newFile = new File(newFileName);
 
-                        out.println(files.toString());
-                        break;
-                    case "delete":
-                        String fileName = tokens[1];
-                        File fileToDelete = new File(fileName);
-                        boolean deleted = fileToDelete.delete();
+                if (oldFile.renameTo(newFile)) {
+                    dataOutput.writeByte('S'); // Success
+                } else {
+                    dataOutput.writeByte('F'); // Failure
+                }
+            } else if (command == 'U') {
+                // Upload file
+                String fileName = dataInput.readUTF();
+                File file = new File(fileName);
 
-                        if (deleted) {
-                            out.println(fileName + " has been deleted.");
-                        } else {
-                            out.println("Unable to delete " + fileName);
-                        }
-
-                        break;
-                    case "rename":
-                        String oldName = tokens[1];
-                        String newName = tokens[2];
-                        File fileToRename = new File(oldName);
-                        File renamedFile = new File(newName);
-                        boolean renamed = fileToRename.renameTo(renamedFile);
-
-                        if (renamed) {
-                            out.println(oldName + " has been renamed to " + newName);
-                        } else {
-                            out.println("Unable to rename " + oldName);
-                        }
-
-                        break;
-                    case "download":
-                        String fileToSend = tokens[1];
-                        File requestedFile = new File(fileToSend);
-
-                        if (requestedFile.isFile()) {
-                            out.println("READY");
-                            FileInputStream fileStream = new FileInputStream(requestedFile);
-                            BufferedInputStream buffer = new BufferedInputStream(fileStream);
-
-                            byte[] bufferArray = new byte[(int) requestedFile.length()];
-                            buffer.read(bufferArray, 0, bufferArray.length);
-
-                            OutputStream outputStream = clientSocket.getOutputStream();
-
-                            outputStream.write(bufferArray, 0, bufferArray.length);
-                            outputStream.flush();
-                            buffer.close();
-                            System.out.println(fileToSend + " sent to client.");
-                        } else {
-                            out.println("FILE_NOT_FOUND");
-                        }
-
-                        break;
-                    case "upload":
-                        String fileNameToSave = tokens[1];
-                        FileOutputStream fileOutput = new FileOutputStream(fileNameToSave);
-                        InputStream inputStream = clientSocket.getInputStream();
-
-                        byte[] bufferArray = new byte[1024 * 1024];
+                if (file.exists()) {
+                    dataOutput.writeByte('F'); // Failure
+                } else {
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        byte[] buffer = new byte[4096];
                         int bytesRead;
-
-                        while ((bytesRead = inputStream.read(bufferArray)) != -1) {
-                            fileOutput.write(bufferArray, 0, bytesRead);
+                        while ((bytesRead = dataInput.read(buffer)) != -1) {
+                            fos.write(buffer, 0, bytesRead);
                         }
+                        dataOutput.writeByte('S'); // Success
+                    } catch (IOException e) {
+                        dataOutput.writeByte('F'); // Failure
+                    }
+                }
+            } else if (command == 'O') {
+                // Download file
+                String fileName = dataInput.readUTF();
+                File file = new File(fileName);
 
-                        fileOutput.close();
-                        System.out.println(fileNameToSave + " received from client.");
-                        out.println("FILE_RECEIVED");
-                        break;
-                    default:
-                        out.println("Invalid command");
-                        break;
+                if (!file.exists()) {
+                    dataOutput.writeByte('F'); // Failure
+                } else {
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = fis.read(buffer)) != -1) {
+                            dataOutput.write(buffer, 0, bytesRead);
+                        }
+                        dataOutput.writeByte('S'); // Success
+                    } catch (IOException e) {
+                        dataOutput.writeByte('F'); // Failure
+                    }
                 }
             }
-
-            in.close();
-            out.close();
-            clientSocket.close();
+            clientSocket.shutdownOutput();
         } catch (IOException e) {
-            System.err.println("Error handling client request: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                System.err.println("Error: " + e.getMessage());
+            }
         }
     }
 }
