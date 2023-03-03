@@ -104,12 +104,15 @@ class ServerThread extends Thread {
                     dataOutput.writeByte('F'); // Failure
                 } else {
                     try (FileInputStream fis = new FileInputStream(file)) {
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        while ((bytesRead = fis.read(buffer)) != -1) {
-                            dataOutput.write(buffer, 0, bytesRead);
+                        int fileSize = (int) file.length();
+                        byte[] buffer = new byte[fileSize];
+                        int bytesRead = fis.read(buffer);
+                        if (bytesRead != fileSize) {
+                            dataOutput.writeByte('F'); // Failure
+                        } else {
+                            dataOutput.writeByte('S'); // Success
+                            dataOutput.write(buffer, 0, fileSize);
                         }
-                        dataOutput.writeByte('S'); // Success
                     } catch (IOException e) {
                         dataOutput.writeByte('F'); // Failure
                     }
