@@ -22,18 +22,20 @@ public class FileClient {
             System.out.println("Connected to file server at " + serverIP + ":" + portNumber);
 
             while (true) {
-                System.out.print("Enter a command (L)ist, (D)elete, (R)ename, (U)pload, (O)ownload, or (E)xit: ");
+                System.out.print("Enter a command (L)ist, (D)elete, (R)ename, (U)pload, or (O)ownload: ");
                 String command = console.readLine();
-                if (command.equals("E")) {
-                    output.writeByte('E'); // Exit command
-                    break;
-                }
                 output.writeByte(command.charAt(0));
 
                 if (command.equals("L")) {
                     String fileName;
                     while (!(fileName = input.readUTF()).equals("END")) {
                         System.out.println(fileName);
+                    }
+                    if (input.readByte() == 'S') {
+                        System.out.println("operation successful");
+                    }
+                    else {
+                        System.out.println("operation failed");
                     }
                 } else if (command.equals("D")) {
                     String fileName = console.readLine();

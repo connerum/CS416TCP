@@ -54,6 +54,7 @@ class ServerThread extends Thread {
                     }
                 }
                 dataOutput.writeUTF("END");
+                dataOutput.writeByte('S');
             } else if (command == 'D') {
                 // Delete file
                 String fileName = dataInput.readUTF();
