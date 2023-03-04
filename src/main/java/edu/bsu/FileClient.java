@@ -77,12 +77,6 @@ public class FileClient {
                         } catch (IOException e) {
                             System.err.println("Error: " + e.getMessage());
                         }
-
-                        if (input.readByte() == 'S') {
-                            System.out.println("operation successful");
-                        } else {
-                            System.out.println("operation failed");
-                        }
                     }
                 } else if (command.equals("O")) {
                     String fileName = console.readLine();
