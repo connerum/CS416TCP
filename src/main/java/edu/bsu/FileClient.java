@@ -64,17 +64,13 @@ public class FileClient {
                         System.out.println("File not found.");
                     } else {
                         try (FileInputStream fis = new FileInputStream(file)) {
-                            byte[] buffer = new byte[4096];
-                            int bytesRead;
-                            while ((bytesRead = fis.read(buffer)) != -1) {
-                                output.write(buffer, 0, bytesRead);
-                            }
-                            // Send success confirmation to server
-                            output.writeByte('S');
-                            if (input.readByte() == 'S') {
-                                System.out.println("File uploaded successfully.");
+                            int fileSize = (int) file.length();
+                            byte[] buffer = new byte[fileSize];
+                            int bytesRead = fis.read(buffer);
+                            if (bytesRead != fileSize) {
+                                output.writeByte('F');
                             } else {
-                                System.out.println("File upload failed.");
+                                output.write(buffer, 0, fileSize);
                             }
                         } catch (IOException e) {
                             System.err.println("Error: " + e.getMessage());
