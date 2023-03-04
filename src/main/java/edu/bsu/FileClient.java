@@ -73,9 +73,10 @@ public class FileClient {
                                 output.writeByte('F');
                             } else {
                                 output.write(buffer, 0, fileSize);
+                                System.out.println("operation successful");
                             }
                         } catch (IOException e) {
-                            System.err.println("Error: " + e.getMessage());
+                            System.err.println("operation failed");
                         }
                     }
                 } else if (command.equals("O")) {
