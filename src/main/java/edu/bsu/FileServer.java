@@ -92,6 +92,7 @@ class ServerThread extends Thread {
                         while ((bytesRead = dataInput.read(buffer)) != -1) {
                             fos.write(buffer, 0, bytesRead);
                         }
+                        dataOutput.writeByte('S');
                     } catch (IOException e) {
                         dataOutput.writeByte('F'); // Failure
                     }

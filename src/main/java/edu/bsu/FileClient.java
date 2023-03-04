@@ -42,9 +42,9 @@ public class FileClient {
                     output.writeUTF(fileName);
 
                     if (input.readByte() == 'S') {
-                        System.out.println("File deleted successfully.");
+                        System.out.println("operation successful");
                     } else {
-                        System.out.println("File deletion failed.");
+                        System.out.println("operation failed");
                     }
                 } else if (command.equals("R")) {
                     String oldFileName = console.readLine();
@@ -53,9 +53,9 @@ public class FileClient {
                     output.writeUTF(newFileName);
 
                     if (input.readByte() == 'S') {
-                        System.out.println("File renamed successfully.");
+                        System.out.println("operation successful");
                     } else {
-                        System.out.println("File renaming failed.");
+                        System.out.println("operation failed");
                     }
                 } else if (command.equals("U")) {
                     String fileName = console.readLine();
@@ -63,7 +63,7 @@ public class FileClient {
                     File file = new File(fileName);
 
                     if (!file.exists()) {
-                        System.out.println("File not found.");
+                        System.out.println("operation failed");
                     } else {
                         try (FileInputStream fis = new FileInputStream(file)) {
                             int fileSize = (int) file.length();
@@ -76,6 +76,12 @@ public class FileClient {
                             }
                         } catch (IOException e) {
                             System.err.println("Error: " + e.getMessage());
+                        }
+
+                        if (input.readByte() == 'S') {
+                            System.out.println("operation successful");
+                        } else {
+                            System.out.println("operation failed");
                         }
                     }
                 } else if (command.equals("O")) {
