@@ -110,6 +110,7 @@ class ServerThread extends Thread {
                         if (bytesRead != fileSize) {
                             dataOutput.writeByte('F'); // Failure
                         } else {
+                            dataOutput.writeByte('S'); // Success
                             dataOutput.write(buffer, 0, fileSize);
                         }
                     } catch (IOException e) {
