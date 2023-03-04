@@ -44,7 +44,6 @@ class ServerThread extends Thread {
             byte command = dataInput.readByte();
 
             if (command == 'L') {
-                // List files
                 File folder = new File(".");
                 File[] files = folder.listFiles();
 
@@ -56,34 +55,31 @@ class ServerThread extends Thread {
                 dataOutput.writeUTF("END");
                 dataOutput.writeByte('S');
             } else if (command == 'D') {
-                // Delete file
                 String fileName = dataInput.readUTF();
                 File file = new File(fileName);
 
                 if (file.delete()) {
-                    dataOutput.writeByte('S'); // Success
+                    dataOutput.writeByte('S');
                 } else {
-                    dataOutput.writeByte('F'); // Failure
+                    dataOutput.writeByte('F');
                 }
             } else if (command == 'R') {
-                // Rename file
                 String oldFileName = dataInput.readUTF();
                 String newFileName = dataInput.readUTF();
                 File oldFile = new File(oldFileName);
                 File newFile = new File(newFileName);
 
                 if (oldFile.renameTo(newFile)) {
-                    dataOutput.writeByte('S'); // Success
+                    dataOutput.writeByte('S');
                 } else {
-                    dataOutput.writeByte('F'); // Failure
+                    dataOutput.writeByte('F');
                 }
             } else if (command == 'U') {
-                // Upload file
                 String fileName = dataInput.readUTF();
                 File file = new File(fileName);
 
                 if (file.exists()) {
-                    dataOutput.writeByte('F'); // Failure
+                    dataOutput.writeByte('F');
                 }
                 else {
                     try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -93,30 +89,29 @@ class ServerThread extends Thread {
                             fos.write(buffer, 0, bytesRead);
                         }
                     } catch (IOException e) {
-                        dataOutput.writeByte('F'); // Failure
+                        dataOutput.writeByte('F');
                     }
                     dataOutput.writeByte('S');
                 }
             } else if (command == 'O') {
-                // Download file
                 String fileName = dataInput.readUTF();
                 File file = new File(fileName);
 
                 if (!file.exists()) {
-                    dataOutput.writeByte('F'); // Failure
+                    dataOutput.writeByte('F');
                 } else {
                     try (FileInputStream fis = new FileInputStream(file)) {
                         int fileSize = (int) file.length();
                         byte[] buffer = new byte[fileSize];
                         int bytesRead = fis.read(buffer);
                         if (bytesRead != fileSize) {
-                            dataOutput.writeByte('F'); // Failure
+                            dataOutput.writeByte('F');
                         } else {
-                            dataOutput.writeByte('S'); // Success
+                            dataOutput.writeByte('S');
                             dataOutput.write(buffer, 0, fileSize);
                         }
                     } catch (IOException e) {
-                        dataOutput.writeByte('F'); // Failure
+                        dataOutput.writeByte('F');
                     }
                 }
             }
