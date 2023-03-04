@@ -38,6 +38,7 @@ public class FileClient {
                         System.out.println("operation failed");
                     }
                 } else if (command.equals("D")) {
+                    System.out.println("Enter File Name: ");
                     String fileName = console.readLine();
                     output.writeUTF(fileName);
 
@@ -47,7 +48,9 @@ public class FileClient {
                         System.out.println("operation failed");
                     }
                 } else if (command.equals("R")) {
+                    System.out.println("Enter File Name: ");
                     String oldFileName = console.readLine();
+                    System.out.println("Enter New File Name: ");
                     String newFileName = console.readLine();
                     output.writeUTF(oldFileName);
                     output.writeUTF(newFileName);
@@ -58,6 +61,7 @@ public class FileClient {
                         System.out.println("operation failed");
                     }
                 } else if (command.equals("U")) {
+                    System.out.println("Enter File Name: ");
                     String fileName = console.readLine();
                     output.writeUTF(fileName);
                     File file = new File(fileName);
@@ -80,6 +84,7 @@ public class FileClient {
                         }
                     }
                 } else if (command.equals("O")) {
+                    System.out.println("Enter File Name: ");
                     String fileName = console.readLine();
                     output.writeUTF(fileName);
 
